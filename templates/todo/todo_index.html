@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %} Vue Django Todo Application {% endblock %}
+
+{% block extra-style %}
+    <style>
+        body {
+            text-align: center;
+            background-color: #ddd;
+        }
+        .inputBox {
+            margin: auto;
+            width: 70%;
+            background: white;
+            height: 50px;
+            border-radius: 50px;
+            line-height: 50px;
+        }
+        .inputBox .name {
+            border-style: none;
+            border-bottom: 1px solid #ddd;
+            width: 90px;
+            padding-left: 20px;
+            line-height: 20px;
+        }
+        .inputBox .item {
+            border-style: none;
+            border-bottom: 1px solid #ddd;
+            width: 400px;
+            margin-left: 50px;
+            padding-left: 20px;
+            line-height: 20px;
+        }
+        .todoList {
+            list-style: none;
+            padding: 10px 0;
+            text-align: left;
+        }
+        .todoList li {
+            display: flex;
+            height: 50px;
+            line-height: 50px;
+            margin: 0.5rem 0;
+            padding: 0 0.9rem;
+            background: white;
+            border-radius: 5px;
+        }
+        .removeBtn {
+            margin-left: auto;
+            font-size: 20px;
+        }
+        .removeBtn:hover {
+            color: red;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div id="app">
+
+        <h1>My Todo App !</h1>
+        <strong>서로 할 일이나 의견을 공유해 봅시다.</strong>
+        <br>
+        <br>
+
+        <div class="inputBox">
+            <input class="name" type="text" placeholder="name ..." v-model.trim="name">
+            <input class="item" type="text" placeholder="type anything welcomed ..." v-model.trim="todo" @keyup.enter="add_todo">
+            <button @click="add_todo" class="btn btn-primary btn-sm">ADD</button>
+        </div>
+
+        <ul class="todoList">
+            <li v-for="(todo, index) in todoList">
+                <span>[[ todo.name ]]::: [[ todo.todo ]]</span>
+                <span class="removeBtn" @click="remove_todo(index)">X</span>
+            </li>
+        </ul>
+    </div>
+{% endblock %}
+
+{% block extra-script %}
+    <script src="https://unpkg.com/vue/dist/vue.min.js"></script>
+    <script>
+        var vm = new Vue({
+            delimiters: ['[[', ']]'],
+            el: '#app',
+            data: {
+                name: '',
+                todo: '',
+                todoList:[
+                    {name:'juhoi', todo:'11111'},
+                    {name:'django', todo:'22222'},
+                    {name:'김주회', todo:'33333'},
+                    {name:'장고', todo:'44444'},
+                ],
+            },
+            methods: {
+                add_todo: function() {
+                    console.log("add_todo()...");
+                    if (this.todo == '') return;
+                    if (this.name == '') this.name = "김주회";
+
+                    this.todoList.push({name: this.name, todo: this.todo});
+                    this.clear_input();
+                },
+                remove_todo: function(index) {
+                    console.log("remove_todo()... ", index);
+                    this.todoList.splice(index, 1);
+                },
+                clear_input: function() {
+                    this.name = '';
+                    this.todo = '';
+                }
+            },
+        })
+    </script>
+{% endblock %}
+
