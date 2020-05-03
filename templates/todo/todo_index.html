@@ -52,11 +52,14 @@
         .removeBtn:hover {
             color: red;
         }
+        [v-clock] {
+            display: none;
+        }
     </style>
 {% endblock %}
 
 {% block content %}
-    <div id="app">
+    <div id="app" v-cloak>
 
         <h1>My Todo App !</h1>
         <strong>서로 할 일이나 의견을 공유해 봅시다.</strong>
@@ -72,7 +75,7 @@
         <ul class="todoList">
             <li v-for="(todo, index) in todoList">
                 <span>[[ todo.name ]]::: [[ todo.todo ]]</span>
-                <span class="removeBtn" @click="remove_todo(index)">X</span>
+                <span class="removeBtn" @click="remove_todo(todo, index)">X</span>
             </li>
         </ul>
     </div>
@@ -80,32 +83,67 @@
 
 {% block extra-script %}
     <script src="https://unpkg.com/vue/dist/vue.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <script>
+        axios.defaults.xsrfCookieName = 'csrftoken';
+        axios.defaults.xsrfHeaderName = 'X-CSRFToken';
+
         var vm = new Vue({
             delimiters: ['[[', ']]'],
             el: '#app',
             data: {
                 name: '',
                 todo: '',
-                todoList:[
-                    {name:'juhoi', todo:'11111'},
-                    {name:'django', todo:'22222'},
-                    {name:'김주회', todo:'33333'},
-                    {name:'장고', todo:'44444'},
-                ],
+                todoList:[],
+            },
+            created: function() {
+                console.log("created()...");
+                this.fetch_all_todo();
             },
             methods: {
+                fetch_all_todo: function() {
+                    console.log("fetch_all_todo()...");
+
+                    var that = this;
+                    axios.get('/api/todo/list/')
+                        .then(function (res) {
+                            console.log("GET RES", res);
+                            that.todoList = res.data;
+                        })
+                        .catch(function (err) {
+                            console.log("GET ERR", err);
+                        })
+                },
                 add_todo: function() {
                     console.log("add_todo()...");
                     if (this.todo == '') return;
                     if (this.name == '') this.name = "김주회";
 
-                    this.todoList.push({name: this.name, todo: this.todo});
-                    this.clear_input();
+                    var postData = {name: this.name, todo: this.todo};
+                    var that = this;
+                    axios.post('/api/todo/create/', postData)
+                        .then(function (res) {
+                            console.log("POST RES ", res);
+                            that.todoList.push({name: res.data.name, todo: res.data.todo});
+                            that.clear_input();
+                        })
+                        .catch(function (err) {
+                            console.log("POST ERR ", err);
+                        })
                 },
-                remove_todo: function(index) {
+                remove_todo: function(todo, index) {
                     console.log("remove_todo()... ", index);
-                    this.todoList.splice(index, 1);
+                    if (confirm("Really delete ?")==false) return;
+
+                    var that = this;
+                    axios.delete('/api/todo/' + todo.id + '/delete/')
+                        .then(function (res) {
+                            console.log("DELETE RES ", res);
+                            that.todoList.splice(index, 1);
+                        })
+                        .catch(function (err) {
+                            console.log("DELETE ERR ", err);
+                        })
                 },
                 clear_input: function() {
                     this.name = '';
